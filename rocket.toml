@@ -1,5 +1,5 @@
 [debug]
-port = 3001
+port = 4000
 
 [release]
 port = 9000

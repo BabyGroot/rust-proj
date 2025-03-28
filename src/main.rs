@@ -1,35 +1,31 @@
-use actix_web::{get, App, HttpResponse, HttpServer, Responder};
-use serde::Serialize;
+#[macro_use]
+extern crate rocket;
+
+use rocket::serde::{json::Json, Serialize};
 
 // Define a struct for your data
 #[derive(Serialize)]
 struct Message {
-    status: String,
+    status: i32,
     message: String,
 }
 
-#[get("/")]
-async fn index() -> impl Responder {
-    HttpResponse::Ok().body("Welcome to my Actix API! Try /hello endpoint.")
-}
-
-// Create a handler for the hello endpoint
+// Create a route that returns JSON
 #[get("/hello")]
-async fn hello() -> impl Responder {
-    let message = Message {
-        status: "success".to_string(),
-        message: "Hello, API!".to_string(),
-    };
-
-    HttpResponse::Ok().json(message)
+fn hello() -> Json<Message> {
+    Json(Message {
+        status: 200,
+        message: "Hello, Rocket API!".to_string(),
+    })
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    println!("Server running at http://localhost:4000");
+// Create a route for the root path
+#[get("/")]
+fn index() -> &'static str {
+    "Welcome to my Rocket API! Try /hello endpoint."
+}
 
-    HttpServer::new(|| App::new().service(index).service(hello))
-        .bind(("localhost", 4000))? // Configure IP and port here
-        .run()
-        .await
+#[launch]
+fn rocket() -> _ {
+    rocket::build().mount("/", routes![index, hello])
 }
