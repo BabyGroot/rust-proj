@@ -1,37 +1,31 @@
-use axum::{
-    extract::Path,
-    http::StatusCode,
-    routing::{get, post},
-    Json, Router,
-};
-use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
-use tower_http::trace::TraceLayer;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-mod health;
-mod router;
+#[macro_use]
+extern crate rocket;
 
-// Define our API response data structures
+use rocket::serde::{json::Json, Serialize};
+
+// Define a struct for your data
 #[derive(Serialize)]
-struct ApiResponse {
-    message: String,
+struct Message {
     status: String,
-    code: u16,
+    message: String,
 }
 
-#[tokio::main]
-async fn main() {
-    // Initialize tracing for better logging
-    tracing_subscriber::fmt::init();
+// Create a route that returns JSON
+#[get("/hello")]
+fn hello() -> Json<Message> {
+    Json(Message {
+        status: "success".to_string(),
+        message: "Hello, Rocket API!".to_string(),
+    })
+}
 
-    // Build our application with routes
-    let app = router::create_router();
+// Create a route for the root path
+#[get("/")]
+fn index() -> &'static str {
+    "Welcome to my Rocket API! Try /hello endpoint."
+}
 
-    // Define the address
-    let addr = SocketAddr::from(([0, 0, 0, 0], 4000));
-    tracing::info!("Server running at http://localhost:{}", addr.port());
-
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:4000").await.unwrap();
-    // Start the server
-    axum::serve(listener, app).await.unwrap();
+#[launch]
+fn rocket() -> _ {
+    rocket::build().mount("/", routes![index, hello])
 }
